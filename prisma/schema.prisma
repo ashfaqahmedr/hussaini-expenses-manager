@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+
+model User {
+  id            String   @id @default(cuid())
+  fullName      String
+  userName      String   @unique
+
+  password      String
+  userType      String   @default("user") // "User", "Admin", "SuperAdmin"
+  timeOutMinute Int      @default(60)
+  status        String   @default("Active") // "Active", "Disabled"
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String  @unique
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String? @db.Text
+  access_token             String? @db.Text
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String? @db.Text
+  session_state            String?
+  refresh_token_expires_in Int?
+  user                     User?   @relation(fields: [userId], references: [id])
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+ 
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id])
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+ 
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+ 
+  @@unique([identifier, token])
+}
+
+model OilEntry {
+  id             String    @id @default(uuid())
+  entryType      String    // "Sales", "Purchase"
+  date           DateTime
+  vehicleNo      String?
+  oilLiters      String?
+  purchasedStock String?
+  invoiceAmount  String?
+  vendor         String?
+  remarks        String?
+  createdOn      DateTime
+  enteredBy      String
+  editedOn       DateTime?
+  editedBy       String?
+  status         String    // "Pending", "Updated", "Rejected"
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Vehicle {
+  vehicleNo   String   @id
+  oilInLiters String
+  contractor  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Report {
+  id                  String   @id @default(uuid())
+  srNo                String
+  vehicleNo           String
+  lastDateOfOilChange DateTime
+  tripAfterOilChange  String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model Settings {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
